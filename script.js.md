@@ -1,224 +1,126 @@
 ``` pyhton
-// ================= INICIO DEL SCRIPT =================
-document.addEventListener("DOMContentLoaded", () => {
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 El Impostor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-  // ================= MUSICA =================
-  const music = document.getElementById("bgMusic");
-  const volumeSlider = document.getElementById("volumeSlider");
+  <!-- ================= MUSICA ================= -->
+  <audio id="bgMusic" loop>
+    <source src="musica.mp3" type="audio/mpeg">
+    Tu navegador no soporta audio.
+  </audio>
 
-  // Iniciar música al primer click (requerido por el navegador)
-  window.addEventListener(
-    "click",
-    () => {
-      if (music && music.paused) {
-        music.volume = volumeSlider ? volumeSlider.value : 0.3;
-        music.play();
-      }
-    },
-    { once: true }
-  );
+  <!-- ================= CONTROL DE VOLUMEN ================= -->
+  <div id="volumeControl">
+    <span>🔊</span>
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.3">
+  </div>
 
-  // Control visual de volumen
-  if (volumeSlider && music) {
-    music.volume = volumeSlider.value;
+  <!-- ================= AGRADECIMIENTOS ================= -->
+  <section id="agradecimientos" class="screen active">
+    <h1>AGRADECIMIENTOS</h1>
 
-    volumeSlider.addEventListener("input", () => {
-      music.volume = volumeSlider.value;
-    });
-  }
+    <p><strong>👩‍💻 Desarrollador:</strong><br>Gabriela Lopez</p>
+    <p><strong>🎹 Música:</strong><br>Victor Zerpa</p>
+    <p><strong>🎨 Arte y Animación:</strong><br>
+      Arianna Escalona<br>
+      Elian Garcia
+    </p>
 
-  // ================= VARIABLES =================
-  const screens = document.querySelectorAll(".screen");
+    <p class="thanks">
+      Agradecimientos especiales 🥺 al Profesor
+      <strong>Gabriel Baute</strong>
+      por guiarnos en el desarrollo de este proyecto 🤠🤞
+    </p>
 
-  let jugadores = [];
-  let palabra = "";
-  let impostorIndex = 0;
-  let turno = 0;
-  let palabraRevelada = false;
-  let tiempo = 120;
-  let intervalo = null;
-  let votos = {};
-  let yaVoto = false;
+    <button id="btnContinuar">Continuar</button>
+  </section>
 
-  // ================= FUNCIONES GENERALES =================
-  function mostrarPantalla(id) {
-    screens.forEach(s => s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-  }
+  <!-- ================= INICIO ================= -->
+  <section id="inicio" class="screen">
+    <h1>🔍 EL IMPOSTOR 🕵️</h1>
+    <button id="btnJugar">Jugar</button>
+  </section>
 
-  // ================= AGRADECIMIENTOS =================
-  document.getElementById("btnContinuar").addEventListener("click", () => {
-    mostrarPantalla("inicio");
-  });
+  <!-- ================= JUGADORES ================= -->
+  <section id="jugadores" class="screen">
+    <h2>Jugadores (2 a 10)</h2>
 
-  // ================= INICIO =================
-  document.getElementById("btnJugar").addEventListener("click", () => {
-    mostrarPantalla("jugadores");
-  });
+    <input
+      type="text"
+      id="nombreJugador"
+      placeholder="Nombre del jugador"
+      autocomplete="off"
+    >
 
-  // ================= JUGADORES =================
-  const inputNombre = document.getElementById("nombreJugador");
-  const listaJugadores = document.getElementById("listaJugadores");
+    <button id="btnAgregarJugador">Agregar</button>
 
-  document.getElementById("btnAgregarJugador").addEventListener("click", () => {
-    const nombre = inputNombre.value.trim();
-    if (!nombre) return alert("Ingresa un nombre");
-    if (jugadores.length >= 10) return alert("Máximo 10 jugadores");
+    <ul id="listaJugadores"></ul>
 
-    jugadores.push(nombre);
-    inputNombre.value = "";
-    renderJugadores();
-  });
+    <button id="btnContinuarCategorias">Continuar</button>
+  </section>
 
-  function renderJugadores() {
-    listaJugadores.innerHTML = "";
-    jugadores.forEach((j, i) => {
-      const li = document.createElement("li");
-      li.textContent = j;
+  <!-- ================= CATEGORIAS ================= -->
+  <section id="categorias" class="screen">
+    <h2>Selecciona una categoría</h2>
 
-      const del = document.createElement("button");
-      del.textContent = "❌";
-      del.classList.add("btn-eliminar");
+    <select id="selectCategoria">
+      <option value="">-- Selecciona --</option>
+      <option value="comida">Comida</option>
+      <option value="lugares">Lugares</option>
+      <option value="animales">Animales</option>
+    </select>
 
-      del.onclick = () => {
-        jugadores.splice(i, 1);
-        renderJugadores();
-      };
+    <br><br>
 
-      li.appendChild(del);
-      listaJugadores.appendChild(li);
-    });
-  }
+    <button id="btnAsignarPalabras">Asignar Palabras</button>
+  </section>
 
-  document.getElementById("btnContinuarCategorias").addEventListener("click", () => {
-    if (jugadores.length < 2) return alert("Mínimo 2 jugadores");
-    mostrarPantalla("categorias");
-  });
+  <!-- ================= PALABRA ================= -->
+  <section id="palabra" class="screen">
+    <h2 id="turnoJugador"></h2>
 
-  // ================= CATEGORIAS =================
-  document.getElementById("btnAsignarPalabras").addEventListener("click", () => {
-    const categoria = document.getElementById("selectCategoria").value;
-    if (!categoria) return alert("Selecciona una categoría");
+    <div id="palabraSecreta" class="blur">
+      TOCA PARA VER
+    </div>
 
-    palabra = palabras[categoria][
-      Math.floor(Math.random() * palabras[categoria].length)
-    ];
+    <p class="hint">
+      No dejes que otros vean la pantalla
+    </p>
 
-    impostorIndex = Math.floor(Math.random() * jugadores.length);
-    turno = 0;
+    <button id="btnSiguienteJugador">Siguiente</button>
+  </section>
 
-    mostrarPantalla("palabra");
-    prepararTurno();
-  });
+  <!-- ================= TEMPORIZADOR ================= -->
+  <section id="temporizador" class="screen">
+    <h2>Tiempo para jugar</h2>
+    <div id="tiempo">2:00</div>
+    <p>Digan una palabra relacionada</p>
+  </section>
 
-  // ================= PALABRA =================
-  const turnoJugador = document.getElementById("turnoJugador");
-  const palabraSecreta = document.getElementById("palabraSecreta");
-  const btnSiguiente = document.getElementById("btnSiguienteJugador");
+  <!-- ================= VOTACION ================= -->
+  <section id="votacion" class="screen">
+    <h2>Votación</h2>
+    <p>¿Quién es el impostor?</p>
 
-  function prepararTurno() {
-    palabraRevelada = false;
-    btnSiguiente.disabled = true;
+    <div id="opcionesVoto"></div>
+  </section>
 
-    turnoJugador.textContent = `Turno de: ${jugadores[turno]}`;
-    palabraSecreta.textContent = "TOCA PARA VER";
-    palabraSecreta.classList.add("blur");
-  }
+  <!-- ================= RESULTADO ================= -->
+  <section id="resultado" class="screen">
+    <h2 id="resultadoTexto"></h2>
+    <button onclick="location.reload()">Jugar de nuevo</button>
+  </section>
 
-  palabraSecreta.onclick = () => {
-    if (palabraRevelada) return;
+  <!-- ================= SCRIPTS ================= -->
+  <script src="palabras.js"></script>
+  <script src="script.js"></script>
 
-    palabraSecreta.textContent =
-      turno === impostorIndex ? "IMPOSTOR" : palabra;
-
-    palabraSecreta.classList.remove("blur");
-    palabraRevelada = true;
-    btnSiguiente.disabled = false;
-  };
-
-  btnSiguiente.onclick = () => {
-    if (!palabraRevelada) return;
-
-    turno++;
-
-    if (turno < jugadores.length) {
-      prepararTurno();
-    } else {
-      mostrarPantalla("temporizador");
-      iniciarTemporizador();
-    }
-  };
-
-  // ================= TEMPORIZADOR =================
-  const tiempoDiv = document.getElementById("tiempo");
-
-  function iniciarTemporizador() {
-    clearInterval(intervalo);
-    tiempo = 120;
-    tiempoDiv.textContent = "2:00";
-
-    intervalo = setInterval(() => {
-      tiempo--;
-
-      const m = Math.floor(tiempo / 60);
-      const s = tiempo % 60;
-      tiempoDiv.textContent = `${m}:${s < 10 ? "0" : ""}${s}`;
-
-      if (tiempo <= 0) {
-        clearInterval(intervalo);
-        prepararVotacion();
-        mostrarPantalla("votacion");
-      }
-    }, 1000);
-  }
-
-  // ================= VOTACIÓN =================
-  const opcionesVoto = document.getElementById("opcionesVoto");
-
-  function prepararVotacion() {
-    opcionesVoto.innerHTML = "";
-    votos = {};
-    yaVoto = false;
-
-    jugadores.forEach(jugador => {
-      const btn = document.createElement("button");
-      btn.textContent = jugador;
-
-      btn.onclick = () => {
-        if (yaVoto) return;
-        votos[jugador] = (votos[jugador] || 0) + 1;
-        yaVoto = true;
-        mostrarResultado();
-      };
-
-      opcionesVoto.appendChild(btn);
-    });
-  }
-
-  // ================= RESULTADO =================
-  const resultadoTexto = document.getElementById("resultadoTexto");
-
-  function mostrarResultado() {
-    let maxVotos = 0;
-    let eliminado = "";
-
-    for (let jugador in votos) {
-      if (votos[jugador] > maxVotos) {
-        maxVotos = votos[jugador];
-        eliminado = jugador;
-      }
-    }
-
-    if (jugadores.indexOf(eliminado) === impostorIndex) {
-      resultadoTexto.textContent =
-        `🎉 ¡Correcto! ${eliminado} era el IMPOSTOR`;
-    } else {
-      resultadoTexto.textContent =
-        `😈 Fallaron… El impostor era ${jugadores[impostorIndex]}`;
-    }
-
-    mostrarPantalla("resultado");
-  }
-
-});
+</body>
+</html>
 ```
