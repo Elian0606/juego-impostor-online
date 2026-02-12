@@ -55,8 +55,9 @@ El-Impostor/
 ├─ style.css           # Estética, animaciones y efectos visuales
 ├─ script.js           # Cerebro del juego: Rondas, puntos y lógica de votos
 ├─ palabras.js         # Diccionario de categorías (Comida, Lugares, Animales)
-└─ publics/            # Carpeta de recursos multimedia y estáticos
+└─ public/            # Carpeta de recursos multimedia y estáticos
    └─ musica.mp3       # Ambientación sonora del juego
+
 ⚙️ Descripción de Archivos
 index.html: Es el esqueleto del juego. Contiene todas las pantallas (.screen) organizadas en una sola página (SPA). Aquí se vinculan los estilos, la música y los scripts.
 
