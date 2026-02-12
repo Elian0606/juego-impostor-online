@@ -1,4 +1,3 @@
-```python
 const palabras = {
 
   comida: [
@@ -27,6 +26,4 @@ const palabras = {
     "Elefante",
     "León"
   ]
-  ```
-
-};
+}

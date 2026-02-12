@@ -1,5 +1,4 @@
-```python
-/* ================= RESET ================= */
+/* ================= CONFIGURACIÓN BASE ================= */
 * {
   margin: 0;
   padding: 0;
@@ -7,7 +6,6 @@
   font-family: "Segoe UI", system-ui, sans-serif;
 }
 
-/* ================= BODY ================= */
 body {
   min-height: 100vh;
   background: radial-gradient(circle at top, #432b57, #020617);
@@ -27,28 +25,22 @@ body {
   padding: 30px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
   text-align: center;
-  animation: fade 0.4s ease;
+  /* Transición suave entre pantallas */
+  opacity: 0;
+  transform: scale(0.96) translateY(10px);
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .screen.active {
   display: block;
-}
-
-/* ================= ANIMACION ================= */
-@keyframes fade {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 /* ================= TEXTOS ================= */
 h1, h2 {
   margin-bottom: 20px;
+  color: #a78bfa;
 }
 
 p {
@@ -61,7 +53,7 @@ p {
   opacity: 0.9;
 }
 
-/* ================= INPUT ================= */
+/* ================= INPUTS Y SELECTS ================= */
 input, select {
   width: 100%;
   padding: 12px;
@@ -72,6 +64,11 @@ input, select {
   background: #281152;
   color: #f8fafc;
   font-size: 1rem;
+}
+
+input:focus, select:focus {
+  box-shadow: 0 0 0 2px rgba(125, 59, 246, 0.5);
+  transition: box-shadow 0.25s ease;
 }
 
 /* ================= BOTONES ================= */
@@ -85,12 +82,13 @@ button {
   color: white;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
 }
 
 button:hover {
   transform: scale(1.03);
   opacity: 0.95;
+  box-shadow: 0 12px 30px rgba(125, 59, 246, 0.35);
 }
 
 button:disabled {
@@ -98,10 +96,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* ================= LISTA JUGADORES ================= */
+/* ================= LISTA JUGADORES Y PUNTOS ================= */
 ul {
   list-style: none;
-  margin-top: 10px;
+  margin: 15px 0;
 }
 
 li {
@@ -112,18 +110,24 @@ li {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  /* Animación de entrada para los puntos */
+  animation: slideIn 0.4s ease-out forwards;
 }
 
-/* boton eliminar */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-15px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .btn-eliminar {
   width: auto;
-  padding: 4px 6px;
-  font-size: 0.7rem;
-  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  margin-top: 0;
   background: #ef4444;
 }
 
-/* ================= PALABRA ================= */
+/* ================= PALABRA SECRETA ================= */
 #palabraSecreta {
   margin: 20px 0;
   padding: 25px;
@@ -132,21 +136,46 @@ li {
   background: #020617;
   border-radius: 16px;
   cursor: pointer;
+  transition: filter 0.35s ease, transform 0.35s ease, background 0.35s ease;
+  border: 2px dashed #7d3bf6;
+}
+
+#palabraSecreta:hover {
+  transform: scale(1.03);
+  background: #0f172a;
 }
 
 .blur {
-  filter: blur(10px);
+  filter: blur(12px);
 }
 
 /* ================= TEMPORIZADOR ================= */
 #tiempo {
-  font-size: 2.5rem;
+  font-size: 3rem;
   margin: 20px 0;
+  font-weight: bold;
+  color: #f59e0b;
 }
 
-/* ================= VOTACION ================= */
-#opcionesVoto button {
-  margin-bottom: 8px;
+/* Animación de alerta para los últimos 10 segundos */
+.alerta {
+  color: #ef4444 !important;
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ================= RESULTADOS Y PUNTOS ================= */
+.highlight-text {
+  font-size: 1.5rem;
+  display: block;
+  margin-bottom: 10px;
+  color: #10b981; /* Verde éxito */
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 /* ================= CONTROL DE VOLUMEN ================= */
@@ -165,73 +194,7 @@ li {
   z-index: 999;
 }
 
-#volumeControl span {
-  font-size: 1rem;
-}
-
 #volumeSlider {
   width: 80px;
   cursor: pointer;
 }
-/* ================= TRANSICIONES ELEGANTES ================= */
-
-/* Transición suave entre pantallas */
-.screen {
-  opacity: 0;
-  transform: scale(0.96) translateY(10px);
-  transition:
-    opacity 0.45s ease,
-    transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.screen.active {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-}
-
-/* Suavizar aparición de textos */
-h1, h2, p {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-/* Inputs y selects más modernos al focus */
-input:focus,
-select:focus {
-  box-shadow: 0 0 0 2px rgba(125, 59, 246, 0.5);
-  transition: box-shadow 0.25s ease;
-}
-
-/* Botones más fluidos */
-button {
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-button:hover {
-  box-shadow: 0 12px 30px rgba(125, 59, 246, 0.35);
-}
-
-/* Palabra secreta con efecto premium */
-#palabraSecreta {
-  transition:
-    filter 0.35s ease,
-    transform 0.35s ease,
-    background 0.35s ease;
-}
-
-#palabraSecreta:hover {
-  transform: scale(1.03);
-}
-
-/* Botones de votación con animación */
-#opcionesVoto button {
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-#opcionesVoto button:hover {
-  transform: scale(1.04);
-}
-
-```

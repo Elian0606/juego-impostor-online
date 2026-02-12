@@ -1,4 +1,3 @@
-```python
 // ================= INICIO DEL SCRIPT =================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -6,22 +5,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const music = document.getElementById("bgMusic");
   const volumeSlider = document.getElementById("volumeSlider");
 
-  // Iniciar música al primer click (requerido por el navegador)
-  window.addEventListener(
-    "click",
-    () => {
+  window.addEventListener("click", () => {
       if (music && music.paused) {
         music.volume = volumeSlider ? volumeSlider.value : 0.3;
-        music.play();
+        music.play().catch(e => console.log("Audio esperando interacción"));
       }
-    },
-    { once: true }
+    }, { once: true }
   );
 
-  // Control visual de volumen
   if (volumeSlider && music) {
-    music.volume = volumeSlider.value;
-
     volumeSlider.addEventListener("input", () => {
       music.volume = volumeSlider.value;
     });
@@ -29,18 +21,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ================= VARIABLES =================
   const screens = document.querySelectorAll(".screen");
-
   let jugadores = [];
   let palabra = "";
   let impostorIndex = 0;
   let turno = 0;
   let palabraRevelada = false;
-
   let tiempo = 120;
   let intervalo = null;
-
   let votos = {};
   let votosRealizados = 0;
+
+  let rondaActual = 1;
+  const totalRondas = 3; 
+  let puntuaciones = {}; 
 
   // ================= FUNCIONES GENERALES =================
   function mostrarPantalla(id) {
@@ -48,17 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById(id).classList.add("active");
   }
 
-  // ================= AGRADECIMIENTOS =================
-  document.getElementById("btnContinuar").addEventListener("click", () => {
-    mostrarPantalla("inicio");
-  });
+  // ================= PANTALLAS INICIALES =================
+  document.getElementById("btnContinuar").addEventListener("click", () => mostrarPantalla("inicio"));
+  document.getElementById("btnJugar").addEventListener("click", () => mostrarPantalla("jugadores"));
 
-  // ================= INICIO =================
-  document.getElementById("btnJugar").addEventListener("click", () => {
-    mostrarPantalla("jugadores");
-  });
-
-  // ================= JUGADORES =================
+  // ================= GESTIÓN DE JUGADORES =================
   const inputNombre = document.getElementById("nombreJugador");
   const listaJugadores = document.getElementById("listaJugadores");
 
@@ -68,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (jugadores.length >= 10) return alert("Máximo 10 jugadores");
 
     jugadores.push(nombre);
+    puntuaciones[nombre] = 0; 
     inputNombre.value = "";
     renderJugadores();
   });
@@ -77,16 +65,14 @@ document.addEventListener("DOMContentLoaded", () => {
     jugadores.forEach((j, i) => {
       const li = document.createElement("li");
       li.textContent = j;
-
       const del = document.createElement("button");
       del.textContent = "❌";
       del.classList.add("btn-eliminar");
-
       del.onclick = () => {
+        delete puntuaciones[jugadores[i]];
         jugadores.splice(i, 1);
         renderJugadores();
       };
-
       li.appendChild(del);
       listaJugadores.appendChild(li);
     });
@@ -97,15 +83,12 @@ document.addEventListener("DOMContentLoaded", () => {
     mostrarPantalla("categorias");
   });
 
-  // ================= CATEGORIAS =================
+  // ================= LÓGICA DE RONDA =================
   document.getElementById("btnAsignarPalabras").addEventListener("click", () => {
     const categoria = document.getElementById("selectCategoria").value;
     if (!categoria) return alert("Selecciona una categoría");
 
-    palabra = palabras[categoria][
-      Math.floor(Math.random() * palabras[categoria].length)
-    ];
-
+    palabra = palabras[categoria][Math.floor(Math.random() * palabras[categoria].length)];
     impostorIndex = Math.floor(Math.random() * jugadores.length);
     turno = 0;
 
@@ -113,7 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
     prepararTurno();
   });
 
-  // ================= PALABRA =================
   const turnoJugador = document.getElementById("turnoJugador");
   const palabraSecreta = document.getElementById("palabraSecreta");
   const btnSiguiente = document.getElementById("btnSiguienteJugador");
@@ -121,28 +103,21 @@ document.addEventListener("DOMContentLoaded", () => {
   function prepararTurno() {
     palabraRevelada = false;
     btnSiguiente.disabled = true;
-
-    turnoJugador.textContent = `Turno de: ${jugadores[turno]}`;
+    turnoJugador.textContent = `Turno de: ${jugadores[turno]} (Ronda ${rondaActual})`;
     palabraSecreta.textContent = "TOCA PARA VER";
     palabraSecreta.classList.add("blur");
   }
 
   palabraSecreta.onclick = () => {
     if (palabraRevelada) return;
-
-    palabraSecreta.textContent =
-      turno === impostorIndex ? "IMPOSTOR" : palabra;
-
+    palabraSecreta.textContent = (turno === impostorIndex) ? "🕵️ IMPOSTOR" : `📖 ${palabra}`;
     palabraSecreta.classList.remove("blur");
     palabraRevelada = true;
     btnSiguiente.disabled = false;
   };
 
   btnSiguiente.onclick = () => {
-    if (!palabraRevelada) return;
-
     turno++;
-
     if (turno < jugadores.length) {
       prepararTurno();
     } else {
@@ -151,21 +126,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ================= TEMPORIZADOR =================
-  const tiempoDiv = document.getElementById("tiempo");
-
   function iniciarTemporizador() {
     clearInterval(intervalo);
     tiempo = 120;
-    tiempoDiv.textContent = "2:00";
-
+    tiempoDiv.classList.remove("alerta");
     intervalo = setInterval(() => {
       tiempo--;
-
       const m = Math.floor(tiempo / 60);
       const s = tiempo % 60;
       tiempoDiv.textContent = `${m}:${s < 10 ? "0" : ""}${s}`;
-
+      if (tiempo <= 10) tiempoDiv.classList.add("alerta");
       if (tiempo <= 0) {
         clearInterval(intervalo);
         prepararVotacion();
@@ -174,55 +144,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 1000);
   }
 
-  // ================= VOTACIÓN =================
+  // ================= VOTACIÓN Y RESULTADOS =================
   const opcionesVoto = document.getElementById("opcionesVoto");
+  const resultadoTexto = document.getElementById("resultadoTexto");
 
   function prepararVotacion() {
     opcionesVoto.innerHTML = "";
     votos = {};
     votosRealizados = 0;
-
-    jugadores.forEach(jugador => {
+    jugadores.forEach(j => {
       const btn = document.createElement("button");
-      btn.textContent = jugador;
-
+      btn.textContent = j;
       btn.onclick = () => {
-        votos[jugador] = (votos[jugador] || 0) + 1;
+        votos[j] = (votos[j] || 0) + 1;
         votosRealizados++;
-
-        if (votosRealizados >= jugadores.length) {
-          mostrarResultado();
-        }
+        btn.disabled = true;
+        if (votosRealizados >= jugadores.length) mostrarResultado();
       };
-
       opcionesVoto.appendChild(btn);
     });
   }
 
- 
-  const resultadoTexto = document.getElementById("resultadoTexto");
-
   function mostrarResultado() {
     let maxVotos = 0;
     let eliminado = "";
-
-    for (let jugador in votos) {
-      if (votos[jugador] > maxVotos) {
-        maxVotos = votos[jugador];
-        eliminado = jugador;
-      }
+    for (let j in votos) {
+      if (votos[j] > maxVotos) { maxVotos = votos[j]; eliminado = j; }
     }
 
-    if (jugadores.indexOf(eliminado) === impostorIndex) {
-      resultadoTexto.textContent =
-        `🎉 ¡Correcto! ${eliminado} era el IMPOSTOR`;
+    let esCorrecto = jugadores.indexOf(eliminado) === impostorIndex;
+    let nombreImpostor = jugadores[impostorIndex];
+    let mensajeHTML = "";
+
+    if (esCorrecto) {
+      mensajeHTML = `<span style="color: #10b981; font-weight: bold;">¡LO LOGRARON!</span><br>Votaron por <b>${eliminado}</b> y era el impostor.`;
+      jugadores.forEach(j => { if (jugadores.indexOf(j) !== impostorIndex) puntuaciones[j]++; });
     } else {
-      resultadoTexto.textContent =
-        `😈 Fallaron… El impostor era ${jugadores[impostorIndex]}`;
+      mensajeHTML = `<span style="color: #ef4444; font-weight: bold;">¡EL IMPOSTOR GANÓ!</span><br>Votaron por <b>${eliminado}</b>, pero el real era <b style="color: #a78bfa;">${nombreImpostor}</b>.`;
+      puntuaciones[nombreImpostor] += 2;
     }
 
+    resultadoTexto.innerHTML = `
+      <h3>Ronda ${rondaActual} Finalizada</h3>
+      <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin: 15px 0;">
+        ${mensajeHTML}
+      </div>
+      <h4>Puntos:</h4>
+      <ul style="list-style: none; padding: 0;">
+        ${jugadores.map(j => `<li>${j}: ${puntuaciones[j]} pts</li>`).join('')}
+      </ul>
+      <div id="btnContenedor"></div>
+    `;
+
+    const btnContenedor = document.getElementById("btnContenedor");
+    const btnAccion = document.createElement("button");
+    btnAccion.classList.add("btn-principal");
+
+    if (rondaActual < totalRondas) {
+      btnAccion.textContent = "Siguiente Ronda";
+      btnAccion.onclick = () => { rondaActual++; mostrarPantalla("categorias"); };
+    } else {
+      btnAccion.textContent = "Ver Ganador Final";
+      btnAccion.onclick = mostrarGanadorFinal;
+    }
+    btnContenedor.appendChild(btnAccion);
     mostrarPantalla("resultado");
   }
 
+  function mostrarGanadorFinal() {
+    let ganador = "";
+    let maxPuntos = -1;
+    for (let j in puntuaciones) {
+      if (puntuaciones[j] > maxPuntos) { maxPuntos = puntuaciones[j]; ganador = j; }
+    }
+
+    resultadoTexto.innerHTML = `
+      <h2 style="color: #ffd700;">🏆 GANADOR FINAL 🏆</h2>
+      <h1 style="font-size: 3rem;">${ganador}</h1>
+      <p>Total: ${maxPuntos} puntos.</p>
+      <button onclick="location.reload()" class="btn-principal">Reiniciar Juego</button>
+    `;
+  }
 });
-```

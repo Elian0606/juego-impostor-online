@@ -1,4 +1,3 @@
-```python
 {
   "dependencies": {
     "cors": "^2.8.6",
@@ -19,4 +18,3 @@
   "author": "",
   "license": "ISC"
 }
-```
