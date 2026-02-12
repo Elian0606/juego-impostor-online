@@ -110,5 +110,245 @@
   <script src="palabras.js"></script>
   <script src="script.js"></script>
 
+
+    <!-- ========== CONFIGURACIÓN FIREBASE ========== -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+<!-- ========== MÓDULO DE SALA ONLINE ========== -->
+<section id="onlineConnect" class="screen">
+  <h2>🎮 Sala Online</h2>
+
+  <!-- Controles de sala -->
+  <div id="onlineRoomControls">
+    <button id="btnCrearSalaOnline">➕ Crear sala</button>
+    <button id="btnUnirseSalaOnline">🔗 Unirse a sala</button>
+  </div>
+
+  <!-- Información de sala activa -->
+  <div id="onlineRoomInfo" style="display: none;">
+    <p>Código de sala: <strong id="onlineRoomCode">---</strong></p>
+    <p>Jugadores conectados:</p>
+    <ul id="listaJugadoresOnline"></ul>
+    <button id="btnAgregarAJugadores">➕ Agregar a la partida</button>
+    <button id="btnSalirSalaOnline">🚪 Salir</button>
+  </div>
+
+  <!-- Panel para unirse a sala -->
+  <div id="onlineJoinPanel" style="display: none;">
+    <input type="text" id="onlineRoomCodeInput" placeholder="Código de 6 dígitos" maxlength="6">
+    <button id="btnConfirmarUnirseOnline">Unirse</button>
+    <button id="btnCancelarUnirseOnline">Cancelar</button>
+  </div>
+
+  <button id="btnVolverAJugadores">⬅ Volver</button>
+</section>
+
+<script>
+  // ========== FIREBASE - CONFIGURACIÓN (CREDENCIALES) ==========
+  const firebaseConfig = {
+    apiKey: "AIzaSy...",
+    authDomain: "tu-proyecto.firebaseapp.com",
+    projectId: "tu-proyecto",
+    storageBucket: "tu-proyecto.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abc123"
+  };
+
+  // Inicializar Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ========== ESTADO DE LA SALA ONLINE ==========
+  let onlineRoomId = null;         // Código de la sala
+  let onlinePlayerName = "";      // Nombre del jugador actual (para salas ajenas)
+  let unsubscribeRoom = null;    // Listener de Firestore
+  let isHost = false;           // ¿El jugador actual es el anfitrión?
+
+  // ========== REFERENCIAS DOM ==========
+  const btnCrearSala = document.getElementById("btnCrearSalaOnline");
+  const btnUnirseSala = document.getElementById("btnUnirseSalaOnline");
+  const btnConfirmarUnirse = document.getElementById("btnConfirmarUnirseOnline");
+  const btnCancelarUnirse = document.getElementById("btnCancelarUnirseOnline");
+  const btnSalirSala = document.getElementById("btnSalirSalaOnline");
+  const btnAgregarAJugadores = document.getElementById("btnAgregarAJugadores");
+  const onlineRoomInfo = document.getElementById("onlineRoomInfo");
+  const onlineRoomControls = document.getElementById("onlineRoomControls");
+  const onlineJoinPanel = document.getElementById("onlineJoinPanel");
+  const onlineRoomCodeSpan = document.getElementById("onlineRoomCode");
+  const listaJugadoresOnline = document.getElementById("listaJugadoresOnline");
+  const btnVolver = document.getElementById("btnVolverAJugadores");
+
+  // ========== FUNCIONES ==========
+  function mostrarPantallaOnline() {
+    mostrarPantalla("onlineConnect");
+  }
+
+  // Genera código aleatorio de 6 dígitos
+  function generarCodigoSala() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  // Crear una nueva sala (anfitrión)
+  async function crearSala() {
+    try {
+      onlineRoomId = generarCodigoSala();
+      onlinePlayerName = "Anfitrión";
+      isHost = true;
+
+      await db.collection("salas").doc(onlineRoomId).set({
+        jugadores: [onlinePlayerName],
+        creada: firebase.firestore.FieldValue.serverTimestamp(),
+        host: onlinePlayerName
+      });
+
+      iniciarEscuchaSala(onlineRoomId);
+      mostrarControlesSala();
+    } catch (error) {
+      alert("Error al crear sala: " + error.message);
+    }
+  }
+
+  // Unirse a una sala existente
+  async function unirseASala(codigo, nombreJugador) {
+    if (!codigo || !nombreJugador) return alert("Código y nombre son requeridos");
+
+    const salaRef = db.collection("salas").doc(codigo);
+    const salaSnap = await salaRef.get();
+
+    if (!salaSnap.exists) {
+      alert("La sala no existe");
+      return;
+    }
+
+    const data = salaSnap.data();
+    if (data.jugadores.includes(nombreJugador)) {
+      alert("Ese nombre ya está en la sala");
+      return;
+    }
+
+    try {
+      await salaRef.update({
+        jugadores: firebase.firestore.FieldValue.arrayUnion(nombreJugador)
+      });
+      onlineRoomId = codigo;
+      onlinePlayerName = nombreJugador;
+      isHost = false;
+      iniciarEscuchaSala(codigo);
+      mostrarControlesSala();
+    } catch (error) {
+      alert("Error al unirse: " + error.message);
+    }
+  }
+
+  // Escuchar cambios en la sala
+  function iniciarEscuchaSala(roomId) {
+    if (unsubscribeRoom) unsubscribeRoom();
+    const salaRef = db.collection("salas").doc(roomId);
+    unsubscribeRoom = salaRef.onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        actualizarListaJugadoresOnline(data.jugadores || []);
+      } else {
+        // Sala eliminada
+        salirDeSala();
+      }
+    });
+  }
+
+  // Actualizar la lista de jugadores online en la UI
+  function actualizarListaJugadoresOnline(jugadoresArray) {
+    listaJugadoresOnline.innerHTML = "";
+    jugadoresArray.forEach(j => {
+      const li = document.createElement("li");
+      li.textContent = j;
+      listaJugadoresOnline.appendChild(li);
+    });
+  }
+
+  // Mostrar panel de sala activa
+  function mostrarControlesSala() {
+    onlineRoomControls.style.display = "none";
+    onlineJoinPanel.style.display = "none";
+    onlineRoomInfo.style.display = "block";
+    onlineRoomCodeSpan.textContent = onlineRoomId;
+  }
+
+  // Salir de la sala actual
+  async function salirDeSala() {
+    if (unsubscribeRoom) {
+      unsubscribeRoom();
+      unsubscribeRoom = null;
+    }
+
+    if (onlineRoomId) {
+      if (isHost) {
+        // Anfitrión: eliminar la sala
+        await db.collection("salas").doc(onlineRoomId).delete();
+      } else {
+        // Jugador normal: removerse de la lista
+        const salaRef = db.collection("salas").doc(onlineRoomId);
+        await salaRef.update({
+          jugadores: firebase.firestore.FieldValue.arrayRemove(onlinePlayerName)
+        });
+      }
+    }
+
+    onlineRoomId = null;
+    onlinePlayerName = "";
+    isHost = false;
+    onlineRoomInfo.style.display = "none";
+    onlineRoomControls.style.display = "block";
+  }
+
+  // Agregar jugadores online a la partida local
+  function agregarJugadoresLocales() {
+    const items = listaJugadoresOnline.querySelectorAll("li");
+    items.forEach(li => {
+      const nombre = li.textContent;
+      if (!jugadores.includes(nombre) && jugadores.length < 10) {
+        jugadores.push(nombre);
+      }
+    });
+    renderJugadores();
+    alert("Jugadores agregados a la lista local");
+  }
+
+  // ========== EVENT LISTENERS ==========
+  btnCrearSala.addEventListener("click", crearSala);
+  btnUnirseSala.addEventListener("click", () => {
+    onlineJoinPanel.style.display = "block";
+    onlineRoomControls.style.display = "none";
+  });
+  btnConfirmarUnirse.addEventListener("click", () => {
+    const codigo = document.getElementById("onlineRoomCodeInput").value.trim();
+    const nombre = prompt("Ingresa tu nombre para la sala:");
+    if (nombre) unirseASala(codigo, nombre);
+  });
+  btnCancelarUnirse.addEventListener("click", () => {
+    onlineJoinPanel.style.display = "none";
+    onlineRoomControls.style.display = "block";
+  });
+  btnSalirSala.addEventListener("click", salirDeSala);
+  btnAgregarAJugadores.addEventListener("click", agregarJugadoresLocales);
+  btnVolver.addEventListener("click", () => {
+    mostrarPantalla("jugadores");
+  });
+
+  // Botón "Conectar Online" en la pantalla de jugadores
+  document.addEventListener("DOMContentLoaded", () => {
+    // Agregar botón dinámicamente en la sección jugadores
+    const jugadoresSection = document.getElementById("jugadores");
+    const btnContinuarCat = document.getElementById("btnContinuarCategorias");
+    if (jugadoresSection && btnContinuarCat) {
+      const btnConectar = document.createElement("button");
+      btnConectar.id = "btnConectarOnline";
+      btnConectar.textContent = "🌐 Conectar Online";
+      btnConectar.style.marginTop = "20px";
+      btnConectar.addEventListener("click", mostrarPantallaOnline);
+      btnContinuarCat.insertAdjacentElement("afterend", btnConectar);
+    }
+  });
+</script>
 </body>
 </html>
