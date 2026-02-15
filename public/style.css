@@ -13,19 +13,20 @@ body {
   justify-content: center;
   align-items: center;
   color: #f8fafc;
+  overflow-x: hidden; /* Evita scroll lateral en móviles */
 }
 
 /* ================= PANTALLAS ================= */
 .screen {
   display: none;
-  width: 100%;
+  width: 90%; /* Ajuste para móviles */
   max-width: 420px;
   background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(10px); /* Efecto cristal para PC */
   border-radius: 20px;
   padding: 30px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
   text-align: center;
-  /* Transición suave entre pantallas */
   opacity: 0;
   transform: scale(0.96) translateY(10px);
   transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
@@ -41,6 +42,8 @@ body {
 h1, h2 {
   margin-bottom: 20px;
   color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 p {
@@ -50,7 +53,10 @@ p {
 
 .thanks {
   font-size: 0.9rem;
-  opacity: 0.9;
+  opacity: 0.8;
+  background: rgba(0,0,0,0.2);
+  padding: 10px;
+  border-radius: 10px;
 }
 
 /* ================= INPUTS Y SELECTS ================= */
@@ -59,58 +65,92 @@ input, select {
   padding: 12px;
   margin-bottom: 12px;
   border-radius: 12px;
-  border: none;
+  border: 1px solid rgba(167, 139, 250, 0.2);
   outline: none;
-  background: #281152;
+  background: #1e0d3d;
   color: #f8fafc;
   font-size: 1rem;
 }
 
-input:focus, select:focus {
-  box-shadow: 0 0 0 2px rgba(125, 59, 246, 0.5);
-  transition: box-shadow 0.25s ease;
-}
-
 /* ================= BOTONES ================= */
-button {
+button, .btn-principal {
   width: 100%;
   padding: 12px;
   margin-top: 10px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #7d3bf6, hsl(276, 39%, 53%));
+  background: linear-gradient(135deg, #7d3bf6, #5b21b6);
   color: white;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 button:hover {
-  transform: scale(1.03);
-  opacity: 0.95;
-  box-shadow: 0 12px 30px rgba(125, 59, 246, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(125, 59, 246, 0.4);
 }
 
-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+/* ================= MENÚ DESPLEGABLE (DROPDOWN) - NUEVO ================= */
+.dropdown {
+  position: relative;
+  width: 100%;
+  margin-top: 15px;
 }
 
-/* ================= LISTA JUGADORES Y PUNTOS ================= */
-ul {
-  list-style: none;
-  margin: 15px 0;
+.btn-dropdown {
+  background: rgba(125, 59, 246, 0.1);
+  border: 1px solid #7d3bf6;
+  color: #a78bfa;
 }
+
+.dropdown-content {
+  display: none;
+  background: #0f172a;
+  border-radius: 14px;
+  padding: 10px;
+  margin-top: 8px;
+  border: 1px solid rgba(125, 59, 246, 0.3);
+}
+
+.dropdown-content.show {
+  display: block;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ================= BOTÓN DISCORD - NUEVO ================= */
+.btn-discord {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 25px;
+  padding: 10px;
+  background: #5865F2; /* Color oficial Discord */
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  transition: 0.3s;
+}
+
+.btn-discord:hover {
+  background: #4752c4;
+  filter: brightness(1.1);
+}
+
+/* ================= LISTAS Y PUNTOS ================= */
+ul { list-style: none; margin: 15px 0; }
 
 li {
-  background: #020617;
-  padding: 10px 12px;
+  background: rgba(2, 6, 23, 0.6);
+  padding: 10px 15px;
   border-radius: 12px;
   margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  /* Animación de entrada para los puntos */
+  border-left: 4px solid #7d3bf6;
   animation: slideIn 0.4s ease-out forwards;
 }
 
@@ -120,62 +160,39 @@ li {
 }
 
 .btn-eliminar {
-  width: auto;
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  margin-top: 0;
-  background: #ef4444;
+  width: auto; padding: 4px 10px; background: #ef4444; font-size: 0.7rem; margin: 0;
 }
 
 /* ================= PALABRA SECRETA ================= */
 #palabraSecreta {
   margin: 20px 0;
-  padding: 25px;
-  font-size: 1.4rem;
-  font-weight: bold;
+  padding: 30px;
+  font-size: 1.6rem;
   background: #020617;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: filter 0.35s ease, transform 0.35s ease, background 0.35s ease;
+  border-radius: 20px;
   border: 2px dashed #7d3bf6;
+  transition: 0.3s;
 }
 
-#palabraSecreta:hover {
-  transform: scale(1.03);
-  background: #0f172a;
-}
-
-.blur {
-  filter: blur(12px);
-}
+.blur { filter: blur(15px); }
 
 /* ================= TEMPORIZADOR ================= */
 #tiempo {
-  font-size: 3rem;
-  margin: 20px 0;
-  font-weight: bold;
+  font-size: 3.5rem;
+  margin: 15px 0;
   color: #f59e0b;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
 }
 
-/* Animación de alerta para los últimos 10 segundos */
 .alerta {
   color: #ef4444 !important;
   animation: shake 0.5s infinite;
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
-}
-
-/* ================= RESULTADOS Y PUNTOS ================= */
-.highlight-text {
-  font-size: 1.5rem;
-  display: block;
-  margin-bottom: 10px;
-  color: #10b981; /* Verde éxito */
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-2deg); }
+  75% { transform: rotate(2deg); }
 }
 
 /* ================= CONTROL DE VOLUMEN ================= */
@@ -184,17 +201,16 @@ li {
   top: 16px;
   right: 16px;
   background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(10px);
   padding: 8px 12px;
   border-radius: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-  z-index: 999;
+  z-index: 1000;
 }
 
-#volumeSlider {
-  width: 80px;
-  cursor: pointer;
+#volumeSlider { width: 70px; margin: 0 0 0 8px; }
+
+/* Adaptación para PC (Pantallas grandes) */
+@media (min-width: 1024px) {
+  .screen { max-width: 500px; padding: 40px; }
 }

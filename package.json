@@ -7,7 +7,7 @@
   },
   "name": "impostor-game",
   "version": "1.0.0",
-  "description": "",
+  "description": "Juego interactivo de deducción social inspirado en dinámicas de impostor, desarrollado como proyecto académico utilizando tecnologías web modernas y lógica de programación avanzada.",
   "main": "bot.js",
   "type": "commonjs",
   "scripts": {
@@ -16,5 +16,13 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GabrielaLopVar/IMPOSTOR-GAME.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GabrielaLopVar/IMPOSTOR-GAME/issues"
+  },
+  "homepage": "https://github.com/GabrielaLopVar/IMPOSTOR-GAME#readme"
 }
